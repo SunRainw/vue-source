@@ -8,9 +8,11 @@ if (!fs.existsSync('dist')) {
   fs.mkdirSync('dist')
 }
 
+// * 获取构建的所有配置
 let builds = require('./config').getAllBuilds()
 
 // filter builds via command line arg
+// * 对配置进行过滤
 if (process.argv[2]) {
   const filters = process.argv[2].split(',')
   builds = builds.filter(b => {
@@ -25,10 +27,12 @@ if (process.argv[2]) {
 
 build(builds)
 
+// * 构建过程的函数
 function build (builds) {
   let built = 0
   const total = builds.length
   const next = () => {
+    // * 遍历通过buildEntry进行构建
     buildEntry(builds[built]).then(() => {
       built++
       if (built < total) {
@@ -40,14 +44,18 @@ function build (builds) {
   next()
 }
 
+// * 运用rollup进行构建打包
 function buildEntry (config) {
   const output = config.output
   const { file, banner } = output
+  // * 根据min，pro判断打包时是否需要压缩
   const isProd = /(min|prod)\.js$/.test(file)
+  // * 运用rollup进行打包构建
   return rollup.rollup(config)
     .then(bundle => bundle.generate(output))
     .then(({ output: [{ code }] }) => {
       if (isProd) {
+        // * 判断是否需要压缩
         const minified = (banner ? banner + '\n' : '') + terser.minify(code, {
           toplevel: true,
           output: {
@@ -64,6 +72,7 @@ function buildEntry (config) {
     })
 }
 
+// * 压缩的方法
 function write (dest, code, zip) {
   return new Promise((resolve, reject) => {
     function report (extra) {

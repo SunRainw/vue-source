@@ -1,5 +1,7 @@
+// * alias提供到达真实文件地址的关系
 const path = require('path')
 
+// * path.resolve是nodejs提供的解析路径的方法，下发对应最外层目录
 const resolve = p => path.resolve(__dirname, '../', p)
 
 module.exports = {

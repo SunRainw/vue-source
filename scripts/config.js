@@ -9,6 +9,7 @@ const version = process.env.VERSION || require('../package.json').version
 const weexVersion = process.env.WEEX_VERSION || require('../packages/weex-vue-framework/package.json').version
 const featureFlags = require('./feature-flags')
 
+// * banner即为版本注释
 const banner =
   '/*!\n' +
   ` * Vue.js v${version}\n` +
@@ -27,19 +28,26 @@ const weexFactoryPlugin = {
 
 const aliases = require('./alias')
 const resolve = p => {
+  // * 获取前一个字段
   const base = p.split('/')[0]
   if (aliases[base]) {
+    // * 存在则根据alias对应的地址映射关系，返回相应的地址
     return path.resolve(aliases[base], p.slice(base.length + 1))
   } else {
+    // * 不存在则单独获取相应的地址
     return path.resolve(__dirname, '../', p)
   }
 }
 
+// * 不同版本vue.js的编译配置
 const builds = {
   // Runtime only (CommonJS). Used by bundlers e.g. Webpack & Browserify
   'web-runtime-cjs-dev': {
+    // * 入口
     entry: resolve('web/entry-runtime.js'),
+    // * 目标
     dest: resolve('dist/vue.runtime.common.dev.js'),
+    // * 构建出来的文件的格式
     format: 'cjs',
     env: 'development',
     banner
@@ -213,6 +221,7 @@ const builds = {
   }
 }
 
+// * 通过遍历的builds的key生成rollup需要的config打包结构
 function genConfig (name) {
   const opts = builds[name]
   const config = {
