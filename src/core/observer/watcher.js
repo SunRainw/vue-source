@@ -50,9 +50,11 @@ export default class Watcher {
     isRenderWatcher?: boolean
   ) {
     this.vm = vm
+    // * 如果是渲染watcher，就在vm上添加_wather，并将Wather实例指向vm._watcher
     if (isRenderWatcher) {
       vm._watcher = this
     }
+    // * 将Wather实例push到vm._wathers中
     vm._watchers.push(this)
     // options
     if (options) {
@@ -72,13 +74,16 @@ export default class Watcher {
     this.newDeps = []
     this.depIds = new Set()
     this.newDepIds = new Set()
+    // * 判断如果是开发环境就将expOrFn转化为字符串，toString只会返回一个新的字符串，不会改变原来的类型
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''
     // parse expression for getter
     if (typeof expOrFn === 'function') {
+      // * 如果expOrFn是一个方法，则将其赋值给Wather实例的getter
       this.getter = expOrFn
     } else {
+      // * 否则就使用parsePath方法将expOrFn转化为一个方法，再赋值给Wather实例的getter
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop
@@ -90,6 +95,7 @@ export default class Watcher {
         )
       }
     }
+    // * 如果Wather是lazy模式则将值传递为undefined，否则就将this.get获取的值传递给this.value
     this.value = this.lazy
       ? undefined
       : this.get()

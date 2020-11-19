@@ -5,4 +5,4 @@
 ### 3. [vue源码构建](./notes/basic/code-structure.md)
 ## 二、数据驱动
 ### 1. [数据驱动概念](./notes/data-driven/data-driven-basic.md)
-### 2. [new Vue发生了什么](./notes/data-driven/new-vue.md)
+### 2. [new Vue发生了什么?](./notes/data-driven/new-vue.md)

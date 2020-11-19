@@ -13,6 +13,8 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
+  // * 执行initMixin时，在原型上添加了一个_init方法
+  // todo init主要是进行初始化，如uid，options等
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // a uid
@@ -23,12 +25,14 @@ export function initMixin (Vue: Class<Component>) {
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
+      // * 可以计算出_init方法运行的次数
       mark(startTag)
     }
 
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
+    // * 初始化时传入的options，被merge到了this.$options上，我们可以通过this.$options访问最初定义的东西
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -42,6 +46,10 @@ export function initMixin (Vue: Class<Component>) {
       )
     }
     /* istanbul ignore else */
+    /**
+     * * 开发环境下initProxy初始化vm
+     * * 生成环境中，vm就是_renderProxy
+     */
     if (process.env.NODE_ENV !== 'production') {
       initProxy(vm)
     } else {
@@ -49,8 +57,8 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
+    initLifecycle(vm) // todo 初始化生命周期
+    initEvents(vm) // todo 初始化事件中心
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
@@ -65,6 +73,7 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // * 判断是否传入了el这个dom对象，传入则用$mount挂载el
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

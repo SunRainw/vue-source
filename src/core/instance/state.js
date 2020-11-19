@@ -42,6 +42,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.set = function proxySetter (val) {
     this[sourceKey][key] = val
   }
+  // * 在访问target[key]时就会访问sharedPropertyDefinition.get
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
@@ -103,6 +104,7 @@ function initProps (vm: Component, propsOptions: Object) {
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
     if (!(key in vm)) {
+      // * 访问 this[key]时，就是访问this._props[key]
       proxy(vm, `_props`, key)
     }
   }
@@ -111,6 +113,7 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // * 不要访问_data，因为_data默认为私有属性，私有属性不能直接访问
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -129,6 +132,7 @@ function initData (vm: Component) {
   let i = keys.length
   while (i--) {
     const key = keys[i]
+    // * 对比data中的key与methods的方法名是否一致，一致则warn
     if (process.env.NODE_ENV !== 'production') {
       if (methods && hasOwn(methods, key)) {
         warn(
@@ -137,6 +141,7 @@ function initData (vm: Component) {
         )
       }
     }
+    // * 对比data中的key与props的属性是否一致，一致则warn
     if (props && hasOwn(props, key)) {
       process.env.NODE_ENV !== 'production' && warn(
         `The data property "${key}" is already declared as a prop. ` +
@@ -144,6 +149,7 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // * 访问 this[key]时，就是访问this._data[key]
       proxy(vm, `_data`, key)
     }
   }

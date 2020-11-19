@@ -143,11 +143,16 @@ export function mountComponent (
   el: ?Element,
   hydrating?: boolean
 ): Component {
+  // * 将el用vm.$el做缓存
   vm.$el = el
+   // * 如果没有定义render函数，并且template也没有转换为一个render函数，
   if (!vm.$options.render) {
+   // * 创建一个createEmptyVNode
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
+      // * 如果在开发环境中，如果定义了template，并且template的第一个值不是#，或者定义了el，或者mountComponent中传入了Element类型的el，则抛出警告
+      // * 这个警告在runtime Only版本，且使用了"<div></div>"这种方式来定义template时
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
         vm.$options.el || el) {
         warn(
@@ -168,6 +173,7 @@ export function mountComponent (
 
   let updateComponent
   /* istanbul ignore if */
+  
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
     updateComponent = () => {
       const name = vm._name
