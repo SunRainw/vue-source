@@ -184,6 +184,8 @@ export function mountComponent (
       mark(startTag)
       const vnode = vm._render()
       mark(endTag)
+      // * measure表示window.performance.measure(),同时将前面的startTag和endTag记录的时间节点清除
+      // * window.performance.measure(name, star, end)， 用于一个导航开始时间或当前时间之间创建一个name的命名，在两个标记之间进行测量时，分别有一个开始标记和一个结束标记
       measure(`vue ${name} render`, startTag, endTag)
 
       mark(startTag)
@@ -192,6 +194,8 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // * 定义了一个updateComponent函数，在函数中调用vm._update(vm._render(), hydrating)
+    // * 第一个参数是通过vm._render()渲染的一个VNode。第二个参数和服务端渲染有关
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }
@@ -200,6 +204,14 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // * 通过new Watcher来执行updateComponent，此处Watcher是一个渲染Watcher
+  /**
+   * @param vm 当前Vue实例
+   * @param exporFn 此处是一个函数或者expression，updateComponent是函数
+   * @param cb 回调函数，此处noop表示一个空函数
+   * @param options 是一些配置，是一个对象
+   * @param isRenderWatcher 是否为渲染Wather
+   */
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
