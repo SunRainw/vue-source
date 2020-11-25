@@ -29,4 +29,12 @@ align title lang translate dir hidden accessKey draggable spellcheck autocapital
 * Virtual DOM用一个原生的JS对象描述一个DOM节点，这样就减小了操作DOM时的性能开销，而在vue.js中是通过一个class来描述VNode，其中借鉴了一个snabbdom的开源库来实现，然后加入了vue特色的东西。
 * VNode是对真实DOM的一种抽象描述，他的核心定义就是几个关键属性，标签名、数据、子节点、键值等，其他属性都是用来扩展VNode的灵活性以及实现一些特殊的feature的。由于VNode只是用来映射到真实DOM的渲染，不需要包含操作DOM，因此就非常轻量和简单。
 * Virtual DOM除了他的数据结构的定义，映射到真实DOM实际上要经历VNode的create、diff、patch等过程。在vue.js中，VNode的create是通过createElement方法创建的。
+## createEelement
+vue的render方法实际上是返回了一个createEelement，通过_createEelement实例化了一个vnode。
+* createEelement实际上是对参数处理后再调用_createEelement方法，在_createEelement中会对children进行扁平化，根据normalizationType不同来调用 normalizeChildren(children) 和 simpleNormalizeChildren(children) 方法
+## patch
+path的整个过程其实是将上次的vnode(或者是在初次渲染时的真实节点也就是关在的$el)更新后转换为新的真实的节点的过程。
+* 初次渲染时一般是div#app，然后将真实的$el转化为虚拟DOM，将当前节点的VNode转化为真实dom，并且依次从最底层将子节点插入到上一级的父节点中，最后将最外层的节点插入到它的父节点中，也就是body中，这也是第一次渲染执行__patch__方法的过程。
 
+## 总结
+整个初始化渲染的过程就是从new Vue开始，进入init节点，然后通过$mount挂载$el，如果是compile版本就将template转换为render函数，否则就直接执行render，渲染生成vnode，然后再patch成一个真实的dom

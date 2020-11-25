@@ -97,6 +97,7 @@ export function renderMixin (Vue: Class<Component>) {
       // * 用render.call调用render方法
       // * vm._renderProxy在生产环境下就是vm，也就是指向当前实例，开发环境是一个Proxy对象
       // * renderProxy的定义也发生在initMixin的过程中
+      // * render.call的返回是createElement的返回值
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

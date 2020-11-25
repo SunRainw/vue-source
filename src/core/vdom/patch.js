@@ -30,6 +30,7 @@ import {
 
 export const emptyNode = new VNode('', {}, [])
 
+// * snabbdom在创建的过程中会执行的钩子
 const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
 
 function sameVnode (a, b) {
@@ -71,8 +72,10 @@ export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
 
+  // * 获取传入的modules和nodeOps
   const { modules, nodeOps } = backend
 
+  // * 遍历所以模块的钩子(hooks)保存到cbs
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = []
     for (j = 0; j < modules.length; ++j) {
@@ -82,8 +85,9 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // * 用来将真实的dom转化为vnode
   function emptyNodeAt (elm) {
-    return new VNode(nodeOps.tagName(elm).toLowerCase(), {}, [], undefined, elm)
+    return new VNode(nodeO ps.tagName(elm).toLowerCase(), {}, [], undefined, elm)
   }
 
   function createRmCb (childElm, listeners) {
@@ -122,9 +126,10 @@ export function createPatchFunction (backend) {
 
   let creatingElmInVPre = 0
 
+  // * 用于将vnode挂载到真实的dom上
   function createElm (
     vnode,
-    insertedVnodeQueue,
+    insertedVnodeQueue, // * 插入节点
     parentElm,
     refElm,
     nested,
@@ -141,6 +146,7 @@ export function createPatchFunction (backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
+    // * createComponent创建一个组件节点
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
       return
     }
@@ -153,6 +159,7 @@ export function createPatchFunction (backend) {
         if (data && data.pre) {
           creatingElmInVPre++
         }
+        // * 判断组件是否被注册
         if (isUnknownElement(vnode, creatingElmInVPre)) {
           warn(
             'Unknown custom element: <' + tag + '> - did you ' +
@@ -163,6 +170,7 @@ export function createPatchFunction (backend) {
         }
       }
 
+      // * 判断有没有namespace来用原生API创建相应的标签的dom
       vnode.elm = vnode.ns
         ? nodeOps.createElementNS(vnode.ns, tag)
         : nodeOps.createElement(tag, vnode)
@@ -180,6 +188,7 @@ export function createPatchFunction (backend) {
           }
           insert(parentElm, vnode.elm, refElm)
         }
+        // * 创建子节点
         createChildren(vnode, children, insertedVnodeQueue)
         if (appendAsTree) {
           if (isDef(data)) {
@@ -188,10 +197,12 @@ export function createPatchFunction (backend) {
           insert(parentElm, vnode.elm, refElm)
         }
       } else {
+        // * 递归调用createElm来生成子节点插入到对应的父节点中
         createChildren(vnode, children, insertedVnodeQueue)
         if (isDef(data)) {
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
+        // * 最后将当前vnode节点插入到parentElm中
         insert(parentElm, vnode.elm, refElm)
       }
 
@@ -199,6 +210,7 @@ export function createPatchFunction (backend) {
         creatingElmInVPre--
       }
     } else if (isTrue(vnode.isComment)) {
+      // * 如果是注释节点就创建注释
       vnode.elm = nodeOps.createComment(vnode.text)
       insert(parentElm, vnode.elm, refElm)
     } else {
@@ -273,6 +285,7 @@ export function createPatchFunction (backend) {
     if (isDef(parent)) {
       if (isDef(ref)) {
         if (nodeOps.parentNode(ref) === parent) {
+          // * 判断ref的父节点是否与parent相等，相等就调用insertBefore插入
           nodeOps.insertBefore(parent, elm, ref)
         }
       } else {
@@ -283,13 +296,16 @@ export function createPatchFunction (backend) {
 
   function createChildren (vnode, children, insertedVnodeQueue) {
     if (Array.isArray(children)) {
+      // * 如果children是数组
       if (process.env.NODE_ENV !== 'production') {
         checkDuplicateKeys(children)
       }
+      // * 遍历调用children子元素，就递归调用，一层一层的插入
       for (let i = 0; i < children.length; ++i) {
         createElm(children[i], insertedVnodeQueue, vnode.elm, null, true, children, i)
       }
     } else if (isPrimitive(vnode.text)) {
+     // * 如果 vnode.text是一个基础类型，就调用原生的appendChild方法来添加一个子节点
       nodeOps.appendChild(vnode.elm, nodeOps.createTextNode(String(vnode.text)))
     }
   }
@@ -697,12 +713,19 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // * 调用vm.__patch__时，实际上就是调用这个函数
+ /**
+  * @param oldVnode 首次传入是真实的dom
+  * @param vnode 虚拟的节点
+  *  */ 
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // * 删除时执行
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
     }
 
+    // * 为了之后做insert钩子时使用
     let isInitialPatch = false
     const insertedVnodeQueue = []
 
@@ -711,6 +734,7 @@ export function createPatchFunction (backend) {
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
+      // * 用来判断oldVnode是不是一个真实的dom
       const isRealElement = isDef(oldVnode.nodeType)
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
@@ -720,6 +744,7 @@ export function createPatchFunction (backend) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // * 服务端渲染逻辑
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
@@ -740,11 +765,14 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // * 将真实的dom转化为vnode在赋值给oldVnode
           oldVnode = emptyNodeAt(oldVnode)
         }
 
         // replacing existing element
+        // * 通过oldVnode.elm可以获取到真实的dom
         const oldElm = oldVnode.elm
+        // * oldVnode的父节点，通过nodeOps中的真实dom的操作获取
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
@@ -790,6 +818,7 @@ export function createPatchFunction (backend) {
 
         // destroy old node
         if (isDef(parentElm)) {
+          // * 如果定义了parentElm就会删掉之前的节点
           removeVnodes([oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {
           invokeDestroyHook(oldVnode)
@@ -797,6 +826,7 @@ export function createPatchFunction (backend) {
       }
     }
 
+    // * 调用一些钩子函数
     invokeInsertHook(vnode, insertedVnodeQueue, isInitialPatch)
     return vnode.elm
   }

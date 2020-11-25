@@ -58,6 +58,7 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+  // * isDef()判断不是undefined和null
   // * 校验data，data不能为响应式的, isDef(data)为true，表明是响应式的会抛错
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -99,16 +100,19 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
-  // * 对children进行normalize
+  // * 对children进行normalize(扁平化)
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
     children = simpleNormalizeChildren(children)
   }
   let vnode, ns
+  // * 如果tag是string
   if (typeof tag === 'string') {
     let Ctor
+    // * 对namespace的处理
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // * 判断tag标签是否是html标签
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
@@ -117,14 +121,17 @@ export function _createElement (
           context
         )
       }
+      // * 创建一个平台的保留标签，实例化一个vnode
       vnode = new VNode(
         config.parsePlatformTagName(tag), data, children,
         undefined, undefined, context
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
+      // * 组件部分
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
+      // * 其他情况下，就实例化相应的vnode
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
