@@ -100,20 +100,21 @@ const hooksToMerge = Object.keys(componentVNodeHooks)
 
 export function createComponent (
   Ctor: Class<Component> | Function | Object | void,
-  data: ?VNodeData,
-  context: Component,
-  children: ?Array<VNode>,
+  data: ?VNodeData, // * 组件data
+  context: Component, // * 上下文
+  children: ?Array<VNode>, // * 子虚拟节点
   tag?: string
 ): VNode | Array<VNode> | void {
   if (isUndef(Ctor)) {
     return
   }
 
-  const baseCtor = context.$options._base
+  const baseCtor = context.$options._base // * 合并后的Vue
 
   // plain options object: turn it into a constructor
   if (isObject(Ctor)) {
-    Ctor = baseCtor.extend(Ctor)
+    // * Vue.extend即使用vue构造器创建一个子类，参数是包含组件选项的对象
+    Ctor = baseCtor.extend(Ctor) // * 将对象转化为新的构造器
   }
 
   // if at this stage it's not a constructor or an async component factory,
@@ -126,6 +127,7 @@ export function createComponent (
   }
 
   // async component
+  // * 异步组件
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
@@ -183,6 +185,7 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // * 安装组件的钩子
   installComponentHooks(data)
 
   // return a placeholder vnode

@@ -6,3 +6,5 @@
 ## 二、数据驱动
 ### 1. [数据驱动概念](./notes/data-driven/data-driven-basic.md)
 ### 2. [new Vue发生了什么?](./notes/data-driven/new-vue.md)
+## 三、组件化
+### 1. [组件化](./notes/component/component-basic.md)
