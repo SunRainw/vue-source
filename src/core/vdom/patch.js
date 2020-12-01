@@ -222,9 +222,11 @@ export function createPatchFunction (backend) {
   function createComponent (vnode, insertedVnodeQueue, parentElm, refElm) {
     let i = vnode.data
     if (isDef(i)) {
+      // * keep-alive逻辑
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive
+      // * 判断是否有hook，且hook中是否有init方法
       if (isDef(i = i.hook) && isDef(i = i.init)) {
-        i(vnode, false /* hydrating */)
+        i(vnode, false /* hydrating */) // * 执行init方法
       }
       // after calling the init hook, if the vnode is a child component
       // it should've created a child instance and mounted it. the child

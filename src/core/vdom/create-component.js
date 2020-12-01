@@ -49,6 +49,7 @@ const componentVNodeHooks = {
         vnode,
         activeInstance
       )
+      // * 手动调用$mount方法
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
@@ -214,12 +215,12 @@ export function createComponentInstanceForVnode (
   // we know it's MountedComponentVNode but flow doesn't
   vnode: any,
   // activeInstance in lifecycle state
-  parent: any
+  parent: any // * 当前vm的实例
 ): Component {
   const options: InternalComponentOptions = {
     _isComponent: true,
-    _parentVnode: vnode,
-    parent
+    _parentVnode: vnode, // * 站位符vnode
+    parent // * 当前vm的实例
   }
   // check inline-template render functions
   const inlineTemplate = vnode.data.inlineTemplate
@@ -227,6 +228,7 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // * new vnode.componentOptions.Ctor实际是执行Sub的构造函数
   return new vnode.componentOptions.Ctor(options)
 }
 

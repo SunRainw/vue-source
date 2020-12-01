@@ -15,7 +15,7 @@ const idToTemplate = cached(id => {
 })
 
 // * 首先获取原型上的$mount方法，使用mount缓存起来
-const mount = Vue.prototype.$mount
+const mount = Vue.prototype.$mount // * 定义在platforms/web/runtime/index.js中
 // * 重新定义$mount主要是用于runtime+compiler版本，上面的是runtime only版本的$mount
 Vue.prototype.$mount = function (
   el?: string | Element, // * el 可以是string也可以是Element节点

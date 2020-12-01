@@ -22,6 +22,7 @@ export let activeInstance: any = null
 export let isUpdatingChildComponent: boolean = false
 
 export function setActiveInstance(vm: Component) {
+  // * 在update时将当前激活的vm实例赋值给activeInstance，同时用prevActiveInstance记录activeInstance
   const prevActiveInstance = activeInstance
   activeInstance = vm
   return () => {
@@ -33,14 +34,18 @@ export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  // * parent即通过createComponentInstanceForVnode传入的activeInstance
+  // * 在initLifecycle可以拿到之前激活的vm实例
   let parent = options.parent
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
+    // * 此时的vm是子组件，将其push到parent的children中
     parent.$children.push(vm)
   }
 
+  // * 将当前实例的$parent指向parent
   vm.$parent = parent
   vm.$root = parent ? parent.$root : vm
 
