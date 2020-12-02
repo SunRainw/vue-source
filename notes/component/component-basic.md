@@ -6,3 +6,7 @@ createComponent最后生成了一个vnode，这个vnode是一个tag使用vue-com
 ### vue.extend
 - 传入一个对象，返回一个构造函数，通过构造一个子类构造器，将其继承父类Vue，将自身的options和Vue的options合并，然后将Vue的extend，mixin，use等属性赋值给该Sub子类，将该子类通过cachedCtors[SuperId]缓存起来，当调用Vue.extend时，如果SuperId相同就判断是否有缓存的构造器，避免多次重新构造初始化。这样就可以在多个组件在调用一个组件时，避免多次初始化。
 ## 组件patch
+- 组件patch就是 createComponent => 子组件初始化 => 子组件render => 子组件patch， 通过递归这个过程，直到没有子组件为止
+- activeInstance为当前激活的vm实例，会作为传入子组件当做子组件的parent实例，
+- vm.$node为组件的占位vnode(即类似为<App />)，vm._node为组件的渲染vnode，即整个组件node
+- 嵌套组件的插入顺序是先子后父，即insert，完成组件的DOM插入

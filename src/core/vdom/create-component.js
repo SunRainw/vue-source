@@ -111,7 +111,7 @@ export function createComponent (
     return
   }
 
-  const baseCtor = context.$options._base // * 合并后的Vue
+  const baseCtor = context.$options._base // * 即vm.$options._base，即为Vue
 
   // plain options object: turn it into a constructor
   if (isObject(Ctor)) {
