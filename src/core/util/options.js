@@ -46,6 +46,7 @@ if (process.env.NODE_ENV !== 'production') {
 /**
  * Helper that recursively merges two data objects together.
  */
+// * 合并策略为子没有父有的才合并，否则以子为标准，返回的是合并后的子
 function mergeData (to: Object, from: ?Object): Object {
   if (!from) return to
   let key, toVal, fromVal
@@ -95,6 +96,7 @@ export function mergeDataOrFn (
     // check if parentVal is a function here because
     // it has to be a function to pass previous merges.
     return function mergedDataFn () {
+      // * data在父类和子类都有的情况下返回是一个函数
       return mergeData(
         typeof childVal === 'function' ? childVal.call(this, this) : childVal,
         typeof parentVal === 'function' ? parentVal.call(this, this) : parentVal
@@ -110,8 +112,10 @@ export function mergeDataOrFn (
         ? parentVal.call(vm, vm)
         : parentVal
       if (instanceData) {
+        // * 当实例中传递data选项时，将实例的data对象和Vm构造函数上的data属性选项合并
         return mergeData(instanceData, defaultData)
       } else {
+        // * 当实例不传递data时，默认返回Vm构造函数上的data属性选项
         return defaultData
       }
     }
@@ -123,8 +127,9 @@ strats.data = function (
   childVal: any,
   vm?: Component
 ): ?Function {
+  // * vm代表是否为Vue创建的实例，否则是字父类的关系
   if (!vm) {
-    if (childVal && typeof childVal !== 'function') {
+    if (childVal && typeof childVal !== 'function') { // * 保证子类的data类型是一个函数
       process.env.NODE_ENV !== 'production' && warn(
         'The "data" option should be a function ' +
         'that returns a per-instance value in component ' +
@@ -137,16 +142,23 @@ strats.data = function (
     return mergeDataOrFn(parentVal, childVal)
   }
 
+  // * vue实例时需要传递vm作为函数的第三个参数
   return mergeDataOrFn(parentVal, childVal, vm)
 }
 
 /**
  * Hooks and props are merged as arrays.
  */
+// * 生命周期合并一个是一个数组
 function mergeHook (
   parentVal: ?Array<Function>,
   childVal: ?Function | ?Array<Function>
 ): ?Array<Function> {
+  /**
+   * * 1. 判断子是否定义，字未定义就取父
+   * * 2. 子定义了，判断父是否定义, 如果父定义了就结合子和父，并且父会优先于子执行
+   * * 3. 如果父未定义，判断子是否是一个数组，如果是就取子，如果不是就将子变成数组
+   */
   const res = childVal
     ? parentVal
       ? parentVal.concat(childVal)
@@ -159,6 +171,7 @@ function mergeHook (
     : res
 }
 
+// * 防止多个组件实例钩子选项相互影响
 function dedupeHooks (hooks) {
   const res = []
   for (let i = 0; i < hooks.length; i++) {
@@ -215,10 +228,13 @@ strats.watch = function (
   if (parentVal === nativeWatch) parentVal = undefined
   if (childVal === nativeWatch) childVal = undefined
   /* istanbul ignore if */
+  // * 没有子就默认用父选项
   if (!childVal) return Object.create(parentVal || null)
   if (process.env.NODE_ENV !== 'production') {
+    //  * 保证watch选项是一个对象
     assertObjectType(key, childVal, vm)
   }
+  // * 没有父就用子选项
   if (!parentVal) return childVal
   const ret = {}
   extend(ret, parentVal)
@@ -409,10 +425,13 @@ export function mergeOptions (
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
   if (!child._base) {
+    // * 从此次分析extends和mixins的功能是相同的，只不过mixins是一个数组，而extends只能是一个
     if (child.extends) {
+      // * 如果有extends就递归调用mergeOptions
       parent = mergeOptions(parent, child.extends, vm)
     }
     if (child.mixins) {
+      // * 如果有mixins，就循环递归调用mergeOptions
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
       }
@@ -425,11 +444,15 @@ export function mergeOptions (
     mergeField(key)
   }
   for (key in child) {
+    // * hasOwn方法调用hasOwnProperty方法判断是否含有某个属性
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
   function mergeField (key) {
+    // * strats上就是根据不同选项设计的不通的合并方法
+    // * strat实际上是一个函数，通过不同的key在strats上获取的
+    // * defaultStrat是如果没有子就调用父，否则就调用子
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)
   }
