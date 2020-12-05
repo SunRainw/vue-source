@@ -32,7 +32,7 @@ export function simpleNormalizeChildren (children: any) {
 // with hand-written render functions / JSX. In such cases a full normalization
 // is needed to cater to all possible types of children values.
 export function normalizeChildren (children: any): ?Array<VNode> {
-  // * 判断child是否是一个除了Object外的基础类型, 是就返回一个VNode的实例(只有文本参数)
+  // * 判断child是否是一个基础类型, 是就返回一个VNode的实例(只有文本参数)
   // * 否则就判断是否为数组，调用normalizeArrayChildren()
   return isPrimitive(children)
     ? [createTextVNode(children)]

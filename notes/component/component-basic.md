@@ -24,3 +24,10 @@ createComponent最后生成了一个vnode，这个vnode是一个tag使用vue-com
 - mounted：mounted的执行顺序是在节点插入时执行，由于插入节点时是先子后父的顺序所以是子组件先执行mounted，父组件后执行。
 - beforeUpdate：每次nextTick时会执行flushSchedulerQueue，这时会执行beforeUpdate
 - updated: 在callUpdatedHooks中，根据判断是否为渲染watcher且执行过mounted后，并且数据发生变化，执行updated
+## 组件注册
+- 全局注册的组件可以在任意地方使用，而局部注册的组件只能在当前组件内使用（原因：全局注册是网Vue.options上扩展，而局部注册是往Sub.options上扩展）
+- 通常组件库中的基础组件建议全局注册，而业务组件建议局部注册
+- 局部注册添加的是一个子组件的配置对象，而全局注册添加的是一个子类构造器
+## 异步组件
+异步组件的实现方式有3种，工厂函数、promise和高阶函数。
+- 1. 工厂函数：在createComponent时判断组件是否为普通的object，如果不是则是异步组件，调用resolveAsyncComponent方法，构造异步组件的resolve和reject方法(为防止当多个地方调用异步组件时，resolve和reject不会重复执行，once函数保证了函数在代码中只执行一次)，最后返回undefined，当ctor为undefined时，就创建一个注释节点，当改组件patch时，调用就不再是异步组件就因此会正常走组件的render,patch过程。这时，旧的注释节点也会被取代。

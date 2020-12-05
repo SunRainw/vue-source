@@ -114,6 +114,7 @@ export function createComponent (
   const baseCtor = context.$options._base // * 即vm.$options._base，即为Vue
 
   // plain options object: turn it into a constructor
+  // * ctor是对象才调用
   if (isObject(Ctor)) {
     // * Vue.extend即使用vue构造器创建一个子类，参数是包含组件选项的对象
     Ctor = baseCtor.extend(Ctor) // * 将对象转化为新的构造器
@@ -131,6 +132,7 @@ export function createComponent (
   // async component
   // * 异步组件
   let asyncFactory
+  // * 工厂函数没有cid
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)

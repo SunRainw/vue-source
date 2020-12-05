@@ -34,7 +34,7 @@ export function createElement (
   normalizationType: any, //
   alwaysNormalize: boolean
 ): VNode | Array<VNode> {
-  // * 如果data是数组，或者是不是object的基础类型
+  // * 如果data是数组，或者是不是基础类型
   if (Array.isArray(data) || isPrimitive(data)) {
     // * 下面三步，对参数不一致的处理，将参数前移
     normalizationType = children
@@ -129,6 +129,7 @@ export function _createElement (
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
       // * 组件部分
+      // * 如果是异步组件，Ctor是一个工厂函数或promise
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // * 其他情况下，就实例化相应的vnode

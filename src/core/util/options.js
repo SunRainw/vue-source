@@ -202,6 +202,7 @@ function mergeAssets (
   const res = Object.create(parentVal || null)
   if (childVal) {
     process.env.NODE_ENV !== 'production' && assertObjectType(key, childVal, vm)
+    // * 将子的key对应的值赋值给父
     return extend(res, childVal)
   } else {
     return res
@@ -476,12 +477,16 @@ export function resolveAsset (
   }
   const assets = options[type]
   // check local registration variations first
+  // * 先查找是否有id对应的key
   if (hasOwn(assets, id)) return assets[id]
   const camelizedId = camelize(id)
+  // * 没有就转化为驼峰，再次查找
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
   const PascalCaseId = capitalize(camelizedId)
+  // * 驼峰没有就转化为首字母大写查找
   if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]
   // fallback to prototype chain
+  // * 如果还是没有就在原型上查找，查找的顺序也是一致
   const res = assets[id] || assets[camelizedId] || assets[PascalCaseId]
   if (process.env.NODE_ENV !== 'production' && warnMissing && !res) {
     warn(

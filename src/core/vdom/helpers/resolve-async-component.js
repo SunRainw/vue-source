@@ -34,6 +34,7 @@ export function createAsyncPlaceholder (
   children: ?Array<VNode>,
   tag: ?string
 ): VNode {
+  // * 创建一个空的vnode，最后渲染为注释节点
   const node = createEmptyVNode()
   node.asyncFactory = factory
   node.asyncMeta = { data, context, children, tag }
@@ -71,6 +72,7 @@ export function resolveAsyncComponent (
     ;(owner: any).$on('hook:destroyed', () => remove(owners, owner))
 
     const forceRender = (renderCompleted: boolean) => {
+      // * 获取每一个调用异步组件的实例，执行原型上的$forceUpdate方法
       for (let i = 0, l = owners.length; i < l; i++) {
         (owners[i]: any).$forceUpdate()
       }
@@ -88,18 +90,22 @@ export function resolveAsyncComponent (
       }
     }
 
+    // * 异步请求成功处理
     const resolve = once((res: Object | Class<Component>) => {
       // cache resolved
+      // * 利用vue.extend转成组件构造器，并将其缓存到resolved属性中
       factory.resolved = ensureCtor(res, baseCtor)
       // invoke callbacks only if this is not a synchronous resolve
       // (async resolves are shimmed as synchronous during SSR)
       if (!sync) {
+        // * 强制更新渲染视图
         forceRender(true)
       } else {
         owners.length = 0
       }
     })
 
+    // * 异步请求失败处理
     const reject = once(reason => {
       process.env.NODE_ENV !== 'production' && warn(
         `Failed to resolve async component: ${String(factory)}` +
@@ -111,8 +117,10 @@ export function resolveAsyncComponent (
       }
     })
 
+    // * 创建子组件时会先执行工厂函数，并将resolve和reject传入
     const res = factory(resolve, reject)
 
+    // * promise方式实现，即res是一个promise对象
     if (isObject(res)) {
       if (isPromise(res)) {
         // () => Promise
