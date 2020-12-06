@@ -31,3 +31,23 @@ createComponent最后生成了一个vnode，这个vnode是一个tag使用vue-com
 ## 异步组件
 异步组件的实现方式有3种，工厂函数、promise和高阶函数。
 - 1. 工厂函数：在createComponent时判断组件是否为普通的object，如果不是则是异步组件，调用resolveAsyncComponent方法，构造异步组件的resolve和reject方法(为防止当多个地方调用异步组件时，resolve和reject不会重复执行，once函数保证了函数在代码中只执行一次)，最后返回undefined，当ctor为undefined时，就创建一个注释节点，当改组件patch时，调用就不再是异步组件就因此会正常走组件的render,patch过程。这时，旧的注释节点也会被取代。
+- 2. promise函数：即在工厂函数中返回一个promise对象，如：es6的import方法就是一个异步方法，而require是一个同步方法，可以用import返回一个promise对象。
+```
+Vue.component('asyncComponent', () => import('./test.vue'))
+```
+- 3. 高级异步组件：即使用loading组件处理组件加载时间过长的等待问题，使用error组件处理加载组件失败的错误提示等。
+```
+Vue.component('asyncComponent', () => ({
+  // 需要加载的组件 (应该是一个 `Promise` 对象)
+  component: import('./MyComponent.vue'),
+  // 异步组件加载时使用的组件
+  loading: LoadingComponent,
+  // 加载失败时使用的组件
+  error: ErrorComponent,
+  // 展示加载时组件的延时时间。默认值是 200 (毫秒)
+  delay: 200,
+  // 如果提供了超时时间且组件加载也超时了，
+  // 则使用加载失败时使用的组件。默认值是：`Infinity`
+  timeout: 3000
+}))
+```
