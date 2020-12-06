@@ -45,6 +45,7 @@ export function resolveAsyncComponent (
   factory: Function,
   baseCtor: Class<Component>
 ): Class<Component> | void {
+  // * error的优先级最高
   if (isTrue(factory.error) && isDef(factory.errorComp)) {
     return factory.errorComp
   }
@@ -59,6 +60,7 @@ export function resolveAsyncComponent (
     factory.owners.push(owner)
   }
 
+  // * 如果factory.loading为true，且有loadingComp构造器
   if (isTrue(factory.loading) && isDef(factory.loadingComp)) {
     return factory.loadingComp
   }
@@ -136,9 +138,11 @@ export function resolveAsyncComponent (
 
         if (isDef(res.loading)) {
           factory.loadingComp = ensureCtor(res.loading, baseCtor)
+          // * 在loading中，如果delay=0就直接设置factory.loading=true
           if (res.delay === 0) {
             factory.loading = true
           } else {
+            // * 否则就setTimeout相应的时间后再设置factory.loading，调用forceRender(false)
             timerLoading = setTimeout(() => {
               timerLoading = null
               if (isUndef(factory.resolved) && isUndef(factory.error)) {
@@ -149,6 +153,7 @@ export function resolveAsyncComponent (
           }
         }
 
+        // * 如果是timeout就在timeout时间后直接reject
         if (isDef(res.timeout)) {
           timerTimeout = setTimeout(() => {
             timerTimeout = null
