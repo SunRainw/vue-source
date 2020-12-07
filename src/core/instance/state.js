@@ -86,6 +86,7 @@ function initProps (vm: Component, propsOptions: Object) {
           vm
         )
       }
+      // * 将props转化成相应式对象
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
           warn(
@@ -150,6 +151,7 @@ function initData (vm: Component) {
       )
     } else if (!isReserved(key)) {
       // * 访问 this[key]时，就是访问this._data[key]
+      // * 将data上的东西代理到vm实例上
       proxy(vm, `_data`, key)
     }
   }

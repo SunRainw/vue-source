@@ -1,0 +1,16 @@
+# 响应式原理
+## 响应式对象
+### Object.defineProperty
+Object.defineProperty方法会直接在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回这个对象
+```JavaScript
+Object.defineProperty(obj, prop, descriptor)
+```
+obj 是要在其定义属性的对象；prop是要定义或修改的属性的名称；descriptor是将定义或修改的属性描述符。
+可以简单的认为一个对象如果拥有了getter和setter，就可以简单地称为响应式对象。
+### 流程
+在initstate时，会通过observe方法将data、props中的数据添加getter和setter变成响应式对象。
+在初次observe时，会通过new Observer创建一个ob实例，在Observer中，会通过def这个封装的Object.defineProperty为value设置__ob__属性，同时将__ob__设置为不可枚举。再判断value是不是数据，如果是数据就循环value的值进行observe，如果是对象，就通过walk方法通过defineReactive，如果value的子属性还是对象，就再次执行observe方法。然后对value设置getter和setter将其变为响应式对象。
+在这个过程中，会如果value是对象，且它的子属性也是对象，会先给其子属性设置为响应式对象，再对value设置为响应式对象。
+## 依赖收集(触发getter)
+- 在触发getter时会将当前的watcher收集起来作为一个订阅者，订阅数据变化的watcher的收集即为依赖收集
+- 依赖收集的目的是为了当这些响应式数据发送变化，触发它们的setter的时候，能知道应该通知那些订阅者去做相应的逻辑处理

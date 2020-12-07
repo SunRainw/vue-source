@@ -52,6 +52,7 @@ export default class Watcher {
     this.vm = vm
     // * 如果是渲染watcher，就在vm上添加_wather，并将Wather实例指向vm._watcher
     if (isRenderWatcher) {
+       // * 这里的this代表的是当前的watcher，也就是说，如果是渲染watcher，就会把当前的watcher赋值给vm._watcher, 也就是说这个vm._watcher表示他是一个渲染watcher
       vm._watcher = this
     }
     // * 将Wather实例push到vm._wathers中
@@ -62,6 +63,14 @@ export default class Watcher {
       this.user = !!options.user
       this.lazy = !!options.lazy
       this.sync = !!options.sync
+      // * 这里是保存了一遍options上的before, 也就是传入的 before函数
+      /*
+        before () {
+          if (vm._isMounted && !vm._isDestroyed) {
+            callHook(vm, 'beforeUpdate')
+          }
+        }
+      */
       this.before = options.before
     } else {
       this.deep = this.user = this.lazy = this.sync = false
@@ -80,7 +89,7 @@ export default class Watcher {
       : ''
     // parse expression for getter
     if (typeof expOrFn === 'function') {
-      // * 如果expOrFn是一个方法，则将其赋值给Wather实例的getter
+      // * 如果expOrFn是一个方法，则将其赋值给Wather的getter
       this.getter = expOrFn
     } else {
       // * 否则就使用parsePath方法将expOrFn转化为一个方法，再赋值给Wather实例的getter
@@ -105,11 +114,20 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // * 将当前的渲染watcher作为当前正在计算的watcher
     pushTarget(this)
     let value
     const vm = this.vm
     try {
       value = this.getter.call(vm, vm)
+      // * 这里使用了一次getter
+      // * 这个getter就是在mountComponent的时候传入的updateComponet
+      // * 这里执行getter也就是执行updateComponent的逻辑, 当执行updateComponent的时候，就会执行vm._render方法
+      // * 在执行vm._render的时候就会触发render方法，在其中计算出最后的VNode的过程中就会触发绑定在data、props等上面的getter属性
+      // * getter属性触发，就会执行dep.depend()这个方法，在其内部触发dep.target.addDep(this)，也就是watcher的addDep方法
+
+      // TODO 也就是说，render执行过程中，访问getter属性，最终就是将订阅者watcher添加到订阅者集合subs里面去，作为当前数据的桥梁
+      // TODO 然后到最后会判断是否需要深层次的订阅, 完了之后，就会执行popTarget，将当前使用的订阅者watcher给pop出去，恢复之前的watcher栈，保持Dep(类)上面的target(watcher)是最初的状态
     } catch (e) {
       if (this.user) {
         handleError(e, vm, `getter for watcher "${this.expression}"`)
@@ -122,7 +140,9 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
+      // * 恢复上一次的正在执行的target
       popTarget()
+      // * 执行cleanupDeps原因是由于如果不清楚当前依赖收集，name当我dom中不需要展示msg时，改变msg依然会监听，依然会重新更新dom
       this.cleanupDeps()
     }
     return value
@@ -134,9 +154,11 @@ export default class Watcher {
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
+      // * 如果newDepIds上没有这个id，就添加这个id并将dep push到bewDeps中
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // * 如果depIds中没有这个id，用addSub将它添加到subs中
         dep.addSub(this)
       }
     }
@@ -145,7 +167,11 @@ export default class Watcher {
   /**
    * Clean up for dependency collection.
    */
+  // * 清除依赖收集
   cleanupDeps () {
+     // * 清除依赖收集
+    // * 主要是数据改变的时候，都会重新渲染，重新渲染的过程中就会重新去调用addDep这个方法
+    // * 因此第一次渲染完，要清除掉，否则下一次进来重新执行addDep再添加进去
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
@@ -154,6 +180,7 @@ export default class Watcher {
       }
     }
     let tmp = this.depIds
+    // * 将新的deps即newDepIds保留到depIds中，然后将newDepIds清除
     this.depIds = this.newDepIds
     this.newDepIds = tmp
     this.newDepIds.clear()
