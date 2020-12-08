@@ -197,8 +197,10 @@ export function defineReactive (
     },
     set: function reactiveSetter (newVal) {
       // ! setter主要是为了做派发更新
+      // * 有geter就调取getter，没有就去val
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
+      // * 用新的值和之前的值做对比，如果值相同就return
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -213,7 +215,9 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      // * 如果新值也是对象就再对新值调用observe
       childOb = !shallow && observe(newVal)
+      // * 派发更新的过程
       dep.notify()
     }
   })

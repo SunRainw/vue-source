@@ -14,3 +14,5 @@ obj 是要在其定义属性的对象；prop是要定义或修改的属性的名
 ## 依赖收集(触发getter)
 - 在触发getter时会将当前的watcher收集起来作为一个订阅者，订阅数据变化的watcher的收集即为依赖收集
 - 依赖收集的目的是为了当这些响应式数据发送变化，触发它们的setter的时候，能知道应该通知那些订阅者去做相应的逻辑处理
+## 派发更新
+对于渲染watcher，触发setter后执行dep.notify()函数，然后对订阅者集合排序后遍历执行watcher的update函数，经过判断后执行queueWatcher，判断当前watcher对于的id在不在queue队列中，不在就将has对象的相应id设置为true，如果flushing为false就将当前watcher push到queue中，然后执行flushSchedulerQueue函数，将flushing置为true，循环执行watcher.run在run的过程中会用this.get算出新的值，然后对比新旧值如果不一样就将新值改变并调用回调函数(对于渲染watcher就是调用updateComponent重新渲染过程)

@@ -199,8 +199,10 @@ export default class Watcher {
     if (this.lazy) {
       this.dirty = true
     } else if (this.sync) {
+      // ! 同步过程
       this.run()
     } else {
+      // * watcher队列
       queueWatcher(this)
     }
   }
@@ -211,8 +213,10 @@ export default class Watcher {
    */
   run () {
     if (this.active) {
+      // * 通过this.get求值
       const value = this.get()
       if (
+        // * 如果新值和现在的值不一样或者新值是一个对象或者this.deep为true
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
         // when the value is the same, because the value may
@@ -225,6 +229,7 @@ export default class Watcher {
         this.value = value
         if (this.user) {
           try {
+            // * cb为实例化watcher时传入的回调函数
             this.cb.call(this.vm, value, oldValue)
           } catch (e) {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)

@@ -14,10 +14,10 @@ import {
 
 export const MAX_UPDATE_COUNT = 100
 
-const queue: Array<Watcher> = []
-const activatedChildren: Array<Component> = []
-let has: { [key: number]: ?true } = {}
-let circular: { [key: number]: number } = {}
+const queue: Array<Watcher> = [] // * watcher数组
+const activatedChildren: Array<Component> = [] // * 激活的children
+let has: { [key: number]: ?true } = {} // * 判断watcher不能重复添加
+let circular: { [key: number]: number } = {} // * 循环更新时使用
 let waiting = false
 let flushing = false
 let index = 0
@@ -82,10 +82,17 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  /*
+    * 排序的原因：
+    * 1. 组价的更新是从父到子(由于组价的创建也是从父到子的)
+    * 2. userWatcher是在渲染watcher之前执行的（组件中创建watcher属性或者调用$watch实际就会生成一个userWatcher）
+    * 3. 当组件的销毁是在父组件的watcher的回调中执行的时候，该组件也就不需要执行了
+   */
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // * 在watcher.run的过程中会执行queueWatcher就会改变queue的长度
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -115,6 +122,7 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // * 重置index, has，waiting等变量
   resetSchedulerState()
 
   // call component updated and activated hooks
@@ -164,13 +172,18 @@ function callActivatedHooks (queue) {
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
  */
+// * 将要更新的watcher往队列推
 export function queueWatcher (watcher: Watcher) {
+  // * 获取watcher的id
   const id = watcher.id
+  // * 如果id不在队列中，将has的id对应的值设置为true
   if (has[id] == null) {
     has[id] = true
+    // * 当flushing为false时，将watcher push到queue队列中
     if (!flushing) {
       queue.push(watcher)
     } else {
+      // * 如果在执行watcher.run的时候又执行queueWatcher
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
       let i = queue.length - 1
@@ -181,6 +194,7 @@ export function queueWatcher (watcher: Watcher) {
     }
     // queue the flush
     if (!waiting) {
+      // * 为了保证nextTick(flushSchedulerQueue)只执行一次
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
