@@ -18,4 +18,8 @@ obj 是要在其定义属性的对象；prop是要定义或修改的属性的名
 对于渲染watcher，触发setter后执行dep.notify()函数，然后对订阅者集合排序后遍历执行watcher的update函数，经过判断后执行queueWatcher，判断当前watcher对于的id在不在queue队列中，不在就将has对象的相应id设置为true，如果flushing为false就将当前watcher push到queue中，然后执行flushSchedulerQueue函数，将flushing置为true，循环执行watcher.run在run的过程中会用this.get算出新的值，然后对比新旧值如果不一样就将新值改变并调用回调函数(对于渲染watcher就是调用updateComponent重新渲染过程)
 - 派发更新就是当数据发生变化后，通知所有订阅者了这个数据变化的watcher执行update
 - 派发更新的过程中会把所有要执行update的watcher推入到队列中，在nextTick后执行flush。
-- 注意：当一个userWatcher(开发者自己定义的watch)中又改变了当前watch监听绑定的值就会再次执行setter，将当前的watch再次push到queue队列中造成死循环。
+- 注意：当一个userWatcher(开发者自己定义的watch)中又改变了当前watch监听绑定的值(且该值每次监听后都会做不同的改变)就会再次执行setter，将当前的watch再次push到queue队列中造成死循环。
+
+## nextTick
+- nextTick是把要执行的任务推入到一个队列中，在下一个tick同步执行
+- 数据改变后触发渲染watcher的update，但是watchers的flush是在nextTick后，所以重新渲染是异步的

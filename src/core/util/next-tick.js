@@ -39,6 +39,7 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+// * 如果支持promise
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -51,6 +52,8 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     if (isIOS) setTimeout(noop)
   }
   isUsingMicroTask = true
+  // * MutationObserver() 创建并返回一个新的MutationObserver它会在指定的DOM发生变化时被调用
+  // * 此处判断是否不是ie浏览器，且原生支持MutationObserver
 } else if (!isIE && typeof MutationObserver !== 'undefined' && (
   isNative(MutationObserver) ||
   // PhantomJS and iOS 7.x
@@ -60,12 +63,18 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
   let counter = 1
+  // * 实例化一个MutationObserver对象，回调是flushCallbacks
   const observer = new MutationObserver(flushCallbacks)
+  // * 创建一个文本节点
   const textNode = document.createTextNode(String(counter))
+  // * 将该文本节点作为监听对象
+  // * character即节点内容或节点文本的变动
   observer.observe(textNode, {
     characterData: true
   })
+  // * 更新textNode的内容，当内容变化就会调用MutationObserver的回调
   timerFunc = () => {
+    // ? 每调用两次改变一次
     counter = (counter + 1) % 2
     textNode.data = String(counter)
   }
@@ -86,22 +95,28 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // * 当前执行nextTick会将回调函数收集到callbacks数组中，在下一次nextTick再执行
   callbacks.push(() => {
     if (cb) {
+      // * 使用try catch是因为js是单线程，为了保证在回调函数执行失败后也可以执行后面的内容
       try {
         cb.call(ctx)
       } catch (e) {
         handleError(e, ctx, 'nextTick')
       }
     } else if (_resolve) {
+      // * 如果有resolve就执行resolve
       _resolve(ctx)
     }
   })
   if (!pending) {
+    // * 在pending时不执行
     pending = true
     timerFunc()
   }
   // $flow-disable-line
+  // * 如果不传cb，且支持Promise，就会返回一个promise
+  // * this.$nextTick().then(callback) 跟 this.$nextTick(callback)类似
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve
