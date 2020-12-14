@@ -78,6 +78,7 @@ export default class Watcher {
     this.cb = cb
     this.id = ++uid // uid for batching
     this.active = true
+    // * lazy标志是否为computed watcher
     this.dirty = this.lazy // for lazy watchers
     this.deps = []
     this.newDeps = []
@@ -105,6 +106,7 @@ export default class Watcher {
       }
     }
     // * 如果Wather是lazy模式则将值传递为undefined，否则就将this.get获取的值传递给this.value
+    // * computed情况下和lazy相同，都不会在创建过程中立即求值加载
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -246,7 +248,9 @@ export default class Watcher {
    * This only gets called for lazy watchers.
    */
   evaluate () {
+    // * 调用this.get()对其求值
     this.value = this.get()
+    // * 求值后将dirty置位false
     this.dirty = false
   }
 

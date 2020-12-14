@@ -176,12 +176,15 @@ const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
+  // * 缓存了computedWatcher的值
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
 
+  // * 遍历computed，computed就是我们定义的计算属性，key就对应到每一个值
   for (const key in computed) {
     const userDef = computed[key]
+    // * 判断key是否key是否为一个function，如果不为function就必须是有get属性的对象
     const getter = typeof userDef === 'function' ? userDef : userDef.get
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
@@ -192,6 +195,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // * 将watchers的每一个key对应Watcher的实例
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -203,6 +207,8 @@ function initComputed (vm: Component, computed: Object) {
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
+    // * 判断key是否在vm实例中，如果是存在就判断是否data或props中再进行分别报错
+    // * 如果不在就通过defineComputed函数定义
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
@@ -220,18 +226,24 @@ export function defineComputed (
   key: string,
   userDef: Object | Function
 ) {
+  // * 在浏览器环境下为true
   const shouldCache = !isServerRendering()
   if (typeof userDef === 'function') {
+    // * sharePropertyDefinition主要保存了get，set，enumerable，configuration属性
+    // todo 如果useDef是function，在浏览器环境下就调用createComputedGetter创建get
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
+    // * function情况下set为noop，即空函数
     sharedPropertyDefinition.set = noop
   } else {
+    // todo 如果有get属性且在浏览器环境下，cache属性不为false，createComputedGetter创建get
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
         ? createComputedGetter(key)
         : createGetterInvoker(userDef.get)
       : noop
+    // * 尽量不使用set
     sharedPropertyDefinition.set = userDef.set || noop
   }
   if (process.env.NODE_ENV !== 'production' &&
@@ -248,9 +260,12 @@ export function defineComputed (
 
 function createComputedGetter (key) {
   return function computedGetter () {
+    // * 通过缓存的computedWatchers获取watcher
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
+      // * dirty用来标志是否已经执行过计算结果，如果执行过则不会执行watcher.evaluate重复计算
       if (watcher.dirty) {
+        // * 通过get获取value
         watcher.evaluate()
       }
       if (Dep.target) {
