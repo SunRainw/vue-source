@@ -3552,6 +3552,7 @@ function _createElement (
   children,
   normalizationType
 ) {
+  // * data含有__ob__属性表示是响应式数据,数据对象不能使定义在vue data属性中的响应式数据
   if (isDef(data) && isDef((data).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
       "Avoid using observed data object as vnode data: " + (JSON.stringify(data)) + "\n" +
@@ -3565,6 +3566,7 @@ function _createElement (
     tag = data.is;
   }
   if (!tag) {
+    // * 防止动态组件，:is属性设置为false时，需要特殊处理
     // in case of component :is set to falsy value
     return createEmptyVNode()
   }

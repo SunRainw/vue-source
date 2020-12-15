@@ -23,3 +23,14 @@ obj 是要在其定义属性的对象；prop是要定义或修改的属性的名
 ## nextTick
 - nextTick是把要执行的任务推入到一个队列中，在下一个tick同步执行
 - 数据改变后触发渲染watcher的update，但是watchers的flush是在nextTick后，所以重新渲染是异步的
+## computed(计算属性)
+### 依赖收集
+- computed的初始化过程，会遍历computed的每一个属性，并为每一个属性实例化一个computed watcher，其中{lazy: true}是computed watcher的标志，最终会调用defineComputed将数据设置为响应式数据。(在vue.extends的过程中会调用initComputed执行defineComputed将数据设置为响应式数据，所以会在组件初始化时判断属性已经在vm中存在)
+- 在非服务端渲染的情形，计算属性的计算结果会被缓存，缓存的意义在于，只有在相关响应式数据发生变化时，computed才会重新求值，其余情况多次访问计算属性的值都会返回之前计算的结果，这就是缓存的优化，computed属性有两种写法，一种是函数，另一种是对象，其中对象的写法需要提供getter和setter方法。
+- 列举一个场景避免和data的处理脱节，computed在计算阶段，如果访问到data数据的属性值，会触发data数据的getter方法进行依赖收集，根据前面分析，<span style="color: red;">data的Dep收集器会将当前watcher作为依赖进行收集订阅，而这个watcher就是computed watcher</span>，并且会为当前的watcher添加访问的数据Dep
+### 派发更新
+- 当计算属性依赖的数据发生更新时，由于数据的Dep收集过computed watch这个依赖，所以会调用dep的notify方法，对依赖进行状态更新。
+- 此时computed watcher和之前介绍的watcher不同，它不会立刻执行依赖的更新操作，而是通过一个dirty进行标记。我们再回头看依赖更新的代码。
+
+由于lazy属性的存在，update过程不会执行状态更新的操作，只会将dirty标记为true。
+- 由于data数据拥有渲染watcher这个依赖，所以同时会执行updateComponent进行视图重新渲染,而render过程中会访问到计算属性,此时由于this.dirty值为true,又会对计算属性重新求值。

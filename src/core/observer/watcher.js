@@ -106,7 +106,7 @@ export default class Watcher {
       }
     }
     // * 如果Wather是lazy模式则将值传递为undefined，否则就将this.get获取的值传递给this.value
-    // * computed情况下和lazy相同，都不会在创建过程中立即求值加载
+    // * lazy为计算属性标志，都不会在创建过程中立即求值加载
     this.value = this.lazy
       ? undefined
       : this.get()
