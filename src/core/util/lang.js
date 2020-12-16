@@ -36,6 +36,7 @@ export function parsePath (path: string): any {
   if (bailRE.test(path)) {
     return
   }
+  // * 通过path.split将路径变为数组
   const segments = path.split('.')
   return function (obj) {
     for (let i = 0; i < segments.length; i++) {

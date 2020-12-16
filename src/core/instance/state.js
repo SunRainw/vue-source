@@ -312,12 +312,15 @@ function initMethods (vm: Component, methods: Object) {
 
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
+    // * 遍历watch获取对应的handler
     const handler = watch[key]
     if (Array.isArray(handler)) {
+      // * 如果handler是一个数组就遍历调用createWatcher函数
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
       }
     } else {
+      // * 否则直接调用createWatcher方法
       createWatcher(vm, key, handler)
     }
   }
@@ -325,15 +328,18 @@ function initWatch (vm: Component, watch: Object) {
 
 function createWatcher (
   vm: Component,
-  expOrFn: string | Function,
-  handler: any,
+  expOrFn: string | Function,// * 观测的值，可以是字符串也可以是函数
+  handler: any, // 
   options?: Object
 ) {
   if (isPlainObject(handler)) {
+    // * 如果handler是一个对象，就取对象的handler属性
+    // * options设置为handler对象
     options = handler
     handler = handler.handler
   }
   if (typeof handler === 'string') {
+    // * 如果是string就取vm的handler对应值的属性
     handler = vm[handler]
   }
   return vm.$watch(expOrFn, handler, options)
@@ -365,6 +371,7 @@ export function stateMixin (Vue: Class<Component>) {
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
+  // * $watch在vue的原型上也就是可以自己调用$watch方法进行监听数据变化
   Vue.prototype.$watch = function (
     expOrFn: string | Function,
     cb: any,
@@ -372,13 +379,16 @@ export function stateMixin (Vue: Class<Component>) {
   ): Function {
     const vm: Component = this
     if (isPlainObject(cb)) {
+      // * 因为可以直接$watch，所以cb可能是一个对象
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
+    // * 将user置位true，表名是userwatcher
     options.user = true
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
       try {
+        // * 配置了immediate属性，就可以立即执行callback一次而不是在数据变化再执行
         cb.call(vm, watcher.value)
       } catch (error) {
         handleError(error, vm, `callback for immediate watcher "${watcher.expression}"`)

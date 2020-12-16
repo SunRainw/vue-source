@@ -94,6 +94,7 @@ export default class Watcher {
       this.getter = expOrFn
     } else {
       // * 否则就使用parsePath方法将expOrFn转化为一个方法，再赋值给Wather实例的getter
+      // * 类似 obj.a
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop
@@ -116,7 +117,7 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
-    // * 将当前的渲染watcher作为当前正在计算的watcher
+    // * 将当前的watcher作为当前正在计算的watcher
     pushTarget(this)
     let value
     const vm = this.vm
